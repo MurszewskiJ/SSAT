@@ -1,7 +1,7 @@
 import re
 import matplotlib.pyplot as mpl
 import collections
-from matplotlib.backends.backend_pdf import PdfPages
+
 
 #############################################
 
@@ -107,7 +107,7 @@ def sentiment_chart(text_for_analysis, save, name = False):
     if save == False:
         mpl.show()
     elif save == True:
-        mpl.savefig((str(re.sub('.txt','', name))+ '_percentage.pdf'))
+        mpl.savefig((str(re.sub('.txt','', name))+ '_percentage.png'))
     mpl.clf()
 
 
@@ -132,7 +132,7 @@ def most_common_chart_negative(text_for_analysis, save, name = False):
     if save == False:
         mpl.show()
     elif save == True:
-        mpl.savefig((str(re.sub('.txt', '', name)) + '_negative.pdf'))
+        mpl.savefig((str(re.sub('.txt', '', name)) + '_negative.png'))
     mpl.clf()
 
 
@@ -156,7 +156,7 @@ def most_common_chart_positive(text_for_analysis, save, name = False):
     if save == False:
         mpl.show()
     elif save == True:
-        mpl.savefig((str(re.sub('.txt', '', name)) + '_positive.pdf'))
+        mpl.savefig((str(re.sub('.txt', '', name)) + '_positive.png'))
     mpl.clf()
 
 def most_common_chart_neutral(text_for_analysis, save, name = False):
@@ -179,7 +179,7 @@ def most_common_chart_neutral(text_for_analysis, save, name = False):
     if save == False:
         mpl.show()
     elif save == True:
-        mpl.savefig((str(re.sub('.txt', '', name)) + '_neutral.pdf'))
+        mpl.savefig((str(re.sub('.txt', '', name)) + '_neutral.png'))
     mpl.clf()
 
 def save_data():
@@ -194,6 +194,7 @@ def save_data():
         file.write("""Sentences with the keyword are: """ + """\n""")
         for sentence in keyword_sentences:
             file.write(sentence)
+            file.write("""\n""")
         file.write("""\n""")
         file.write("""\n""")
 
@@ -219,10 +220,10 @@ def save_data():
     file.close()
 
 
-#    most_common_chart_positive(text_for_analysis, True, filename)
-#    most_common_chart_negative(text_for_analysis, True, filename)
-#    most_common_chart_neutral(text_for_analysis, True, filename)
-#    sentiment_chart(text_for_analysis, True, filename)
+    most_common_chart_positive(text_for_analysis, True, filename)
+    most_common_chart_negative(text_for_analysis, True, filename)
+    most_common_chart_neutral(text_for_analysis, True, filename)
+    sentiment_chart(text_for_analysis, True, filename)
 
 def text_sort(text_for_analysis):
     text_negative = []
@@ -246,37 +247,55 @@ def percentages ():
     neu_per = neutral_counter(text_for_analysis) / (negative_counter(text_for_analysis) + positive_counter(text_for_analysis) + neutral_counter(text_for_analysis)) * 100
     return  neg_per, poz_per, neu_per
 
-def open_file(path):
-    text = open((path), 'r')
-    text_list = str(text.read()).lower()
-    text.close()
-    text_for_analysis = re.sub(r'[^\w\s\']', '', text_list)  # deleting punctuation
-    text_for_analysis = re.split('[^\w]', text_for_analysis)
-    while '' in text_for_analysis:
-        text_for_analysis.remove('')
-    return  text_for_analysis
+def open_file(path, stpw):
+    if stpw == 0:
+        text = open((path), 'r')
+        text_list = str(text.read()).lower()
+        text.close()
+        text_for_analysis = re.sub(r'[^\w\s\']', '', text_list)  # deleting punctuation
+        text_for_analysis = re.split('[^\w]', text_for_analysis)
+        while '' in text_for_analysis:
+            text_for_analysis.remove('')
+
+    elif stpw == 1:
+        text = open((path), 'r')
+        text_list = str(text.read()).lower()
+        text.close()
+        text_for_analysis = []
+        text_for = re.sub(r'[^\w\s\']', '', text_list)  # deleting punctuation
+        text_for = re.split('[^\w]', text_for)
+        while '' in text_for:
+            text_for.remove('')
+
+        for element in text_for:
+            if element.lower() not in stopwords:
+                text_for_analysis.append(element.lower())
+    return text_for_analysis
+
+
 #####################################################
 
 # to load negative words
 wordlist_negative = set()
-wordlist_negative_file = open(r'C:\Users\Ja\PycharmProjects\Sentiment_Analisys\negative_words.txt','r')
+wordlist_negative_file = open(r'negative_words.txt','r')
 for line in wordlist_negative_file:
     wordlist_negative.add(line.strip())
 wordlist_negative_file.close()
 
 # to load positive words
 wordlist_positive = set()
-wordlist_positive_file = open(r'C:\Users\Ja\PycharmProjects\Sentiment_Analisys\positive_words.txt','r')
+wordlist_positive_file = open(r'positive_words.txt','r')
 for line in wordlist_positive_file:
     wordlist_positive.add(line.strip())
 wordlist_positive_file.close()
 
 #to load stopwords
-stopwords = set()
-stopwords_file = open(r'C:\Users\Ja\PycharmProjects\Sentiment_Analisys\stopwords.txt','r')
+stopwords = list()
+stopwords_file = open(r'stopwords.txt','r')
 for line in stopwords_file:
-    stopwords.add(line.strip())
+    stopwords.append(line.strip())
 stopwords_file.close()
+
 
 ################################################
 
@@ -292,7 +311,7 @@ number = int(input("Select a number: "))
 if number == 1:
     path = input ("Enter the path to the file: "
                   "")
-    text_for_analysis = open_file(path)
+    text_for_analysis = open_file(path, 0)
     neg_per, poz_per, neu_per = percentages()
     text_negative, text_positive, text_neutral = text_sort(text_for_analysis)
     overall_sentiment()
@@ -300,16 +319,13 @@ if number == 1:
 elif number == 2:
     path = input("Enter the path to the file: "
                  "")
-    text_for_analysis = open_file(path)
-    for element in text_for_analysis:
-        if element in stopwords:
-            text_for_analysis.remove(element)
+    text_for_analysis = open_file(path, 1)
     neg_per, poz_per, neu_per = percentages()
     text_negative, text_positive, text_neutral = text_sort(text_for_analysis)
     overall_sentiment()
 
 elif number == 3:
-    keyword = input("Enter the keywords you are looking for: "
+    keyword = input("Enter the keyword you are looking for: "
                     "")
     path = input("Enter the path to the file: "
                  "")
@@ -339,7 +355,7 @@ elif number == 3:
     neg_per, poz_per, neu_per = percentages()
     text_negative, text_positive, text_neutral = text_sort(text_for_analysis)
 
-    decison = input("""Would you like to see the details and charts? Y/N
+    decison = input("""Would you like to see the sentiment analysis? Y/N
     """)
     if decison == "Y":
         overall_sentiment()
@@ -370,9 +386,11 @@ elif number == 4:
         for word in split_element:
             if word.lower() not in stopwords:
                 text_for_analysis.append(word.lower())
+    while '' in text_for_analysis:
+        text_for_analysis.remove('')
     neg_per, poz_per, neu_per = percentages()
     text_negative, text_positive, text_neutral = text_sort(text_for_analysis)
-    decison = input("""Would you like to see the details and charts? Y/N
+    decison = input("""Would you like to see the sentiment analysis? Y/N
     """)
     if decison == "Y":
         overall_sentiment()
